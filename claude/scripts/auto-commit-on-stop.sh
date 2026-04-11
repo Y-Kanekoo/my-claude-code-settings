@@ -184,4 +184,20 @@ fi
 
 log "完了 - ログ: $LOG_FILE"
 
+# === 設定リポジトリのドリフト検知 ===
+SETTINGS_REPO="$HOME/Projects/my-claude-code-settings/claude"
+if [ -d "$SETTINGS_REPO" ]; then
+    DRIFT=""
+    for target in skills scripts CLAUDE.md settings.json; do
+        if [ -e "$HOME/.claude/$target" ]; then
+            D=$(diff -rq "$HOME/.claude/$target" "$SETTINGS_REPO/$target" 2>/dev/null | grep -v "data-status" | head -3)
+            [ -n "$D" ] && DRIFT="${DRIFT}${D}\n"
+        fi
+    done
+    if [ -n "$DRIFT" ]; then
+        osascript -e 'display notification "設定に未同期の変更があります。/sync-settings push で同期" with title "Claude Settings Drift"' 2>/dev/null || true
+        log "設定ドリフト検知: $(echo -e "$DRIFT" | wc -l | tr -d ' ')件の差分"
+    fi
+fi
+
 exit 0
