@@ -1,0 +1,304 @@
+/* @theme custom-slide */
+@import 'default';
+
+/* ========================================
+   カラーパレット・基本設定
+   ======================================== */
+:root {
+  --color-primary: #1B4565;
+  --color-accent: #3E9BA4;
+  --color-bg: #FFFFFF;
+  --color-bg-alt: #F4F7FA;
+  --color-text: #2C3E50;
+  --color-text-light: #7F8C8D;
+  --color-border: #E0E6ED;
+  --color-code-bg: #2D3748;
+  --font-sans: 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
+}
+
+/* ========================================
+   ベーススタイル
+   ======================================== */
+section {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 28px;
+  line-height: 1.6;
+  padding: 50px 60px;
+}
+
+/* タイポグラフィ階層 */
+h1 {
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--color-primary);
+  border-bottom: 3px solid var(--color-accent);
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+}
+
+h2 {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 20px;
+}
+
+h3 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 16px;
+}
+
+h4 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+h5 {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-text-light);
+}
+
+/* リスト */
+ul, ol {
+  margin-left: 0;
+  padding-left: 1.5em;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+/* リンク */
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+/* 強調 */
+strong {
+  color: var(--color-primary);
+}
+
+em {
+  color: var(--color-accent);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* テーブル */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 24px;
+  margin: 16px 0;
+}
+
+th {
+  background: var(--color-primary);
+  color: white;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+}
+
+td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+tr:nth-child(even) td {
+  background: var(--color-bg-alt);
+}
+
+/* コードブロック */
+code {
+  background: var(--color-bg-alt);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--color-primary);
+}
+
+pre {
+  background: var(--color-code-bg);
+  color: #E2E8F0;
+  padding: 20px 24px;
+  border-radius: 8px;
+  font-size: 20px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* blockquote */
+blockquote {
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-bg-alt);
+  padding: 16px 24px;
+  margin: 16px 0;
+  border-radius: 0 8px 8px 0;
+  font-style: normal;
+}
+
+/* フッター */
+footer {
+  font-size: 14px;
+  color: var(--color-text-light);
+}
+
+/* ページ番号 */
+section::after {
+  font-size: 14px;
+  color: var(--color-text-light);
+}
+
+/* ========================================
+   コンポーネント: タイトルスライド
+   ======================================== */
+section.title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #2C5F7C 100%);
+  color: white;
+}
+
+section.title h1 {
+  font-size: 52px;
+  color: white;
+  border-bottom: 3px solid var(--color-accent);
+  padding-bottom: 16px;
+}
+
+section.title h2 {
+  font-size: 28px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 12px;
+}
+
+section.title p {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 24px;
+}
+
+/* ========================================
+   コンポーネント: セクション見出し
+   ======================================== */
+section.section-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--color-bg-alt);
+}
+
+section.section-header h1 {
+  font-size: 48px;
+  border-bottom: none;
+  border-left: 6px solid var(--color-accent);
+  padding-left: 24px;
+  padding-bottom: 0;
+}
+
+section.section-header p {
+  font-size: 24px;
+  color: var(--color-text-light);
+  padding-left: 30px;
+  margin-top: 12px;
+}
+
+/* ========================================
+   コンポーネント: 2カラムレイアウト
+   ======================================== */
+section.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 0 40px;
+  align-items: start;
+}
+
+section.two-column h1,
+section.two-column h2 {
+  grid-column: 1 / -1;
+}
+
+/* ========================================
+   コンポーネント: メトリック・KPI表示
+   ======================================== */
+section.metric {
+  text-align: center;
+}
+
+section.metric h1 {
+  border-bottom: none;
+  margin-bottom: 40px;
+}
+
+section.metric strong {
+  display: inline-block;
+  font-size: 64px;
+  color: var(--color-accent);
+  margin: 8px 24px;
+}
+
+section.metric em {
+  display: block;
+  font-size: 20px;
+  color: var(--color-text-light);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+/* ========================================
+   コンポーネント: コード中心スライド
+   ======================================== */
+section.code-slide pre {
+  font-size: 18px;
+  max-height: 420px;
+}
+
+section.code-slide h1 {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+/* ========================================
+   コンポーネント: まとめスライド
+   ======================================== */
+section.summary {
+  background: var(--color-bg-alt);
+}
+
+section.summary h1 {
+  text-align: center;
+  border-bottom: none;
+}
+
+section.summary ul {
+  font-size: 26px;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+section.summary li {
+  margin-bottom: 16px;
+  padding-left: 8px;
+}

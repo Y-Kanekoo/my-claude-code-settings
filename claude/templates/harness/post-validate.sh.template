@@ -1,0 +1,47 @@
+#!/bin/bash
+# PostToolUse(Bash) hook: プロジェクト固有のバリデーション
+# 設計: 変更ファイル抽出 → 対象判定 → 軽量検証 → 結果返却
+#
+# 設置先: .claude/hooks/post-validate.sh
+# settings.local.json での登録:
+#   "hooks": { "PostToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": ".claude/hooks/post-validate.sh", "timeout": 15 }] }] }
+
+set -uo pipefail
+
+# === 共通ライブラリ（出力ズレ記録） ===
+source "${HOME}/.claude/scripts/lib/deviation_recorder.sh" 2>/dev/null || true
+
+# === プロジェクト設定 ===
+# TODO: プロジェクトディレクトリを設定
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+[ -d "$PROJECT_DIR" ] || exit 0
+
+# === 入力解析 ===
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null) || true
+OUTPUT=$(echo "$INPUT" | jq -r '.tool_response // ""' 2>/dev/null) || true
+
+# === バリデーションルール ===
+# TODO: プロジェクト固有の検証を追加
+
+# 例: テスト実行後の結果チェック
+# if echo "$COMMAND" | grep -qE "pytest|python -m pytest"; then
+#     if echo "$OUTPUT" | grep -qE "FAILED|ERROR"; then
+#         record_deviation "test-failure" \
+#             "全テストがパスすること" \
+#             "テスト失敗: $(echo "$OUTPUT" | grep -E 'FAILED|ERROR' | head -1)" \
+#             "失敗テストを修正する"
+#     fi
+# fi
+
+# 例: 成果物の存在チェック（ビルド後）
+# if echo "$COMMAND" | grep -qE "npm run build|make"; then
+#     if [ ! -d "$PROJECT_DIR/dist" ]; then
+#         record_deviation "build-missing-output" \
+#             "dist/ ディレクトリが生成されること" \
+#             "dist/ が存在しない" \
+#             "ビルドエラーを確認する"
+#     fi
+# fi
+
+exit 0

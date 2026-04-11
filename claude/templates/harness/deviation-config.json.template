@@ -1,0 +1,10 @@
+{
+  "_comment": "プロジェクト固有の出力ズレ記録設定（Tier 2+）",
+  "_comment2": "このファイルを .claude/deviation-config.json に配置すると、analyze-deviations.sh が参照する",
+  "threshold": 3,
+  "exclude_types": [],
+  "custom_types": {
+    "_example_build-failure": "ビルド失敗",
+    "_example_test-regression": "テスト回帰"
+  }
+}

@@ -1,0 +1,27 @@
+# ランタイム・セッション関連
+*.jsonl
+debug/
+sessions/
+logs/
+tasks/
+plans/
+downloads/
+paste-cache/
+file-history/
+shell-snapshots/
+backups/
+projects/
+stats-cache.json
+mcp-needs-auth-cache.json
+telemetry/
+statsig/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 機密情報
+*.pem
+*.key
+.env
+.env.*
