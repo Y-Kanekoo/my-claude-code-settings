@@ -46,15 +46,37 @@ parsed=$(jq -r --arg sep "$SEP" '[
   ((.rate_limits.five_hour.used_percentage // -1) | tostring),
   ((.rate_limits.five_hour.resets_at // 0) | tostring),
   ((.rate_limits.seven_day.used_percentage // -1) | tostring),
-  ((.rate_limits.seven_day.resets_at // 0) | tostring)
+  ((.rate_limits.seven_day.resets_at // 0) | tostring),
+  (.session_id // "")
 ] | join($sep)' 2>/dev/null) || { debug "jqパース失敗"; exit 0; }
 
 IFS="$SEP" read -r CWD MODEL PCT_RAW COST LINES_ADD LINES_DEL DURATION_MS \
   WT_NAME VIM_MODE AGENT_NAME \
-  RL5H_PCT RL5H_RESET RL7D_PCT RL7D_RESET <<< "$parsed"
+  RL5H_PCT RL5H_RESET RL7D_PCT RL7D_RESET SESSION_ID <<< "$parsed"
 
-# --- effort level（settings.jsonから直接取得、キャッシュなし）---
-EFFORT=$(jq -r '.effortLevel // ""' "$HOME/.claude/settings.json" 2>/dev/null) || EFFORT=""
+# --- effort level ---
+# 優先順位（Claude Code 本体の挙動に合わせる）:
+#   1. CLAUDE_CODE_EFFORT_LEVEL 環境変数 … Claude Code 本体がこれを最優先するため、
+#      envが設定されている間は /effort を実行しても上書きされない。statusline も追従する。
+#   2. 現セッションで最後に実行された /effort コマンド（history.jsonl から抽出）
+#      … env未設定時のみ有効。/effort max もここで拾える。
+#   3. ~/.claude/settings.json の effortLevel（永続化値）
+EFFORT="${CLAUDE_CODE_EFFORT_LEVEL:-}"
+if [ -z "$EFFORT" ]; then
+  HISTORY_FILE="$HOME/.claude/history.jsonl"
+  if [ -n "$SESSION_ID" ] && [ -f "$HISTORY_FILE" ]; then
+    # 末尾から最大 2000 行をスキャン。SIGPIPE を許容するためサブシェル+|| true で括る
+    EFFORT=$({ tail -r "$HISTORY_FILE" 2>/dev/null | head -2000 | jq -r --arg sid "$SESSION_ID" '
+      select(.sessionId == $sid)
+      | .display
+      | capture("(?:^|\\n)/effort\\s+(?<lvl>low|medium|high|xhigh|max)\\b") // empty
+      | .lvl
+    ' 2>/dev/null | head -1; } || true)
+  fi
+fi
+if [ -z "$EFFORT" ]; then
+  EFFORT=$(jq -r '.effortLevel // ""' "$HOME/.claude/settings.json" 2>/dev/null) || EFFORT=""
+fi
 
 # --- ヘルパー関数 ---
 
@@ -122,11 +144,11 @@ build_rl_part() {
   [ "$pct_int" -lt 0 ] && return 1
   gradient_color "$pct_int"
   braille_bar "$pct_int" "$RL_BAR_WIDTH"
-  local warn=""; [ "$pct_int" -ge "$WARN_THRESHOLD" ] && warn=" ⚠"
+  local warn=""; [ "$pct_int" -ge "$WARN_THRESHOLD" ] && warn=" ${BOLD}${RED}⚠${RST}"
   local remain=""
   local reset_int=$(to_int "$reset_raw" 0)
   if [ "$reset_int" -gt 0 ]; then
-    fmt_remaining "$reset_int"; remain=" ${DIM}${_FR}${RST}"
+    fmt_remaining "$reset_int"; remain=" ${DIM}↻${_FR}${RST}"
   fi
   _RL_PART="${DIM}${label}${RST} ${_GC}${_BB}${RST} ${pct_int}%${warn}${remain}"
 }
@@ -151,12 +173,16 @@ if git_toplevel=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null); then
   REPO_NAME=$(sanitize "${git_toplevel##*/}")
   BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null) || BRANCH=""
   BRANCH=$(sanitize "$BRANCH")
+  # 長すぎるブランチ名は省略（例: auto/issue-1234-xxxx... → auto/issue-1234-xxxx…）
+  if [ "${#BRANCH}" -gt 32 ]; then
+    BRANCH="${BRANCH:0:31}…"
+  fi
   # NOTE: diff --quiet HEAD は未追跡ファイルを検出しない（パフォーマンス上の許容）
   DIRTY=""; git -C "$CWD" diff --quiet HEAD 2>/dev/null || DIRTY="*"
   if [ "$DIR_NAME" = "$REPO_NAME" ]; then
-    LINE1="${BOLD}${WHITE}${DIR_NAME}${RST} ${CYAN}${BRANCH}${DIRTY}${RST}"
+    LINE1="${BOLD}${WHITE}${DIR_NAME}${RST} ${DIM}⎇${RST} ${CYAN}${BRANCH}${RST}${YELLOW}${DIRTY}${RST}"
   else
-    LINE1="${BOLD}${WHITE}${DIR_NAME}${RST} ${DIM}│${RST} ${CYAN}${REPO_NAME} ${BRANCH}${DIRTY}${RST}"
+    LINE1="${BOLD}${WHITE}${DIR_NAME}${RST} ${DIM}│${RST} ${CYAN}${REPO_NAME}${RST} ${DIM}⎇${RST} ${CYAN}${BRANCH}${RST}${YELLOW}${DIRTY}${RST}"
   fi
 else
   LINE1="${BOLD}${WHITE}${DIR_NAME}${RST}"
@@ -172,7 +198,7 @@ MODE_PARTS=()
 if [ ${#MODE_PARTS[@]} -gt 0 ]; then
   MODE_STR=""
   for p in "${MODE_PARTS[@]}"; do
-    [ -n "$MODE_STR" ] && MODE_STR+=" "
+    [ -n "$MODE_STR" ] && MODE_STR+=" ${DIM}·${RST} "
     MODE_STR+="$p"
   done
   LINE1+=" ${DIM}│${RST} ${MODE_STR}"
@@ -181,14 +207,15 @@ fi
 # ===== LINE2: コンテキスト / モデル / effort =====
 gradient_color "$PCT"; CTX_COLOR="$_GC"
 braille_bar "$PCT" "$CTX_BAR_WIDTH"; CTX_BAR="$_BB"
-CTX_WARN=""; [ "$PCT" -ge "$WARN_THRESHOLD" ] && CTX_WARN=" ⚠"
+CTX_WARN=""; [ "$PCT" -ge "$WARN_THRESHOLD" ] && CTX_WARN=" ${BOLD}${RED}⚠${RST}"
 
 EFFORT_DISPLAY=""
 case "$EFFORT" in
-  max)    EFFORT_DISPLAY=" ${BOLD}${MAGENTA}★max${RST}" ;;
-  high)   EFFORT_DISPLAY=" ${GREEN}●high${RST}" ;;
-  medium) EFFORT_DISPLAY=" ${YELLOW}◐med${RST}" ;;
-  low)    EFFORT_DISPLAY=" ${DIM}○low${RST}" ;;
+  max)    EFFORT_DISPLAY=" ${DIM}·${RST} ${BOLD}${MAGENTA}★max${RST}" ;;
+  xhigh)  EFFORT_DISPLAY=" ${DIM}·${RST} ${BOLD}${GREEN}◆xhigh${RST}" ;;
+  high)   EFFORT_DISPLAY=" ${DIM}·${RST} ${GREEN}●high${RST}" ;;
+  medium) EFFORT_DISPLAY=" ${DIM}·${RST} ${YELLOW}◐med${RST}" ;;
+  low)    EFFORT_DISPLAY=" ${DIM}·${RST} ${DIM}○low${RST}" ;;
 esac
 
 LINE2="${DIM}ctx${RST} ${CTX_COLOR}${CTX_BAR}${RST} ${PCT}%${CTX_WARN} ${DIM}│${RST} ${CYAN}${MODEL}${RST}${EFFORT_DISPLAY}"

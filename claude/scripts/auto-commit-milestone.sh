@@ -2,8 +2,7 @@
 # PostToolUse(Bash) hook: テスト合格・提出ファイル生成時に自動コミット
 # Stop hookとの重複防止: 直前コミットから60秒以内なら何もしない
 
-# NOTE: 自分のプロジェクトパスに変更してください
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+PROJECT_DIR="$HOME/Projects/kaggle/playground-s6e4"
 [ -d "$PROJECT_DIR/.git" ] || exit 0
 cd "$PROJECT_DIR" || exit 0
 

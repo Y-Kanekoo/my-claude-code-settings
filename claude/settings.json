@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
+  },
   "permissions": {
     "allow": [
       "Read",
@@ -130,7 +133,12 @@
       "Bash(MKL_NUM_THREADS=*)",
       "Bash(NODE_ENV=*)",
       "Bash(DATABASE_URL=*)",
-      "Bash(LOG_LEVEL=*)"
+      "Bash(LOG_LEVEL=*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue close:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(gh issue reopen:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",
@@ -199,6 +207,7 @@
     ],
     "defaultMode": "auto"
   },
+  "model": "opus",
   "hooks": {
     "Stop": [
       {
@@ -218,6 +227,11 @@
             "type": "command",
             "command": "osascript -e 'display notification \"タスクが完了しました\" with title \"Claude Code\" sound name \"Glass\"' 2>/dev/null; printf '\\a' 2>/dev/null; exit 0",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/auto-compile-memory.sh",
+            "timeout": 30
           }
         ]
       }
@@ -230,6 +244,28 @@
             "type": "command",
             "command": "~/.claude/scripts/guard-dangerous-bash.sh",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/auto-codex-review.sh",
+            "timeout": 45
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/auto-codex-review-on-push.sh",
+            "timeout": 130
           }
         ]
       }
@@ -252,7 +288,11 @@
       }
     }
   },
-  "effortLevel": "high",
+  "effortLevel": "xhigh",
+  "advisorModel": "opus",
+  "tui": "fullscreen",
+  "theme": "light-daltonized",
+  "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
-  "model": "sonnet"
+  "skipDangerousModePermissionPrompt": true
 }

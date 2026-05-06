@@ -5,8 +5,7 @@
 # === 共通ライブラリ読み込み ===
 source "${HOME}/.claude/scripts/lib/deviation_recorder.sh" 2>/dev/null || exit 0
 
-# NOTE: 自分のプロジェクトパスに変更してください
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+PROJECT_DIR="$HOME/Projects/kaggle/playground-s6e4"
 
 [ -d "$PROJECT_DIR" ] || exit 0
 
