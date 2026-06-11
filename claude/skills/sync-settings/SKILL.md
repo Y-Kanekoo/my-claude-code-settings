@@ -35,6 +35,7 @@ user-invocable: true
 | `~/.claude/scripts/` | `claude/scripts/` |
 | `~/.claude/skills/` (data-status除外) | `claude/skills/` |
 | `~/.claude/templates/harness/` | `claude/templates/harness/` |
+| `~/.claude/workflows/` | `claude/workflows/` |
 
 ### 同期対象外（PC固有・ランタイム）
 - `projects/` — プロジェクト固有メモリ
@@ -56,7 +57,7 @@ REPO_DIR="$HOME/Projects/my-claude-code-settings"
 CLAUDE_DIR="$HOME/.claude"
 
 # 同期対象ディレクトリ
-SYNC_DIRS=(commands config scripts skills templates)
+SYNC_DIRS=(commands config scripts skills templates workflows)
 SYNC_FILES=(CLAUDE.md settings.json settings.local.json)
 
 # Push
